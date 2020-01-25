@@ -109,7 +109,7 @@ class Game extends React.Component {
 
 // 勝敗判定
 // 9 つの square の配列が与えられると、この関数は勝者がいるか適切に確認し、'X' か 'O'、あるいは null を返します。
-function calculateWinner(squares: Array<string>): string {
+const calculateWinner = (squares: string[]) => {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -127,7 +127,7 @@ function calculateWinner(squares: Array<string>): string {
     }
   }
   return "";
-}
+};
 
 // ========================================
 
