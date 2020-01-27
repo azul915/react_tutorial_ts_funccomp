@@ -65,7 +65,7 @@ interface History {
   squares: string[];
 }
 
-const Game = () => {
+const Game = (props: GameProps) => {
   const [history, setHistory] = React.useState<History[]>([
     {
       squares: Array(9).fill("")
@@ -142,8 +142,6 @@ const Game = () => {
   );
 };
 
-// 勝敗判定
-// 9 つの square の配列が与えられると、この関数は勝者がいるか適切に確認し、'X' か 'O'、あるいは null を返します。
 const calculateWinner = (squares: string[]) => {
   const lines = [
     [0, 1, 2],
