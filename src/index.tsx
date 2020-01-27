@@ -3,14 +3,15 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./styles.css";
 
+/* ============================================== Square ======================================== */
 // TypeScriptはプロパティの定義にInterfaceが必要
-interface SquarePropsInterface {
+interface SquareProps {
   value: string;
   onClick: () => void;
 }
 
 // 関数コンポーネントは、render メソッドだけを有して自分の state を持たないコンポーネントを、よりシンプルに書くための方法
-const Square = (props: SquarePropsInterface) => {
+const Square = (props: SquareProps) => {
   return (
     // 関数コンポーネントは引数からpropsを受け取るのでthisが要らない
     // onClick={props.onClick}でもよい
@@ -20,57 +21,31 @@ const Square = (props: SquarePropsInterface) => {
     </button>
   );
 };
-interface BoardPropsInterface {
-  squares: Array<string>;
+
+/* ============================================== Board ======================================== */
+interface BoardProps {
+  value: string;
+  onClick: (i: number) => void;
 }
 
-interface BoardStateInterface {
-  squares: Array<string>;
-}
-
-class Board extends React.Component<BoardPropsInterface, BoardStateInterface> {
-  /* JavaScript のクラスでは、サブクラスのコンストラクタを定義する際は常に super を呼ぶ必要があります。constructor を持つ React のクラスコンポーネントでは、すべてコンストラクタを super(props) の呼び出しから始めるべきです。 */
-  constructor(props: BoardPropsInterface) {
-    super(props);
-    this.state = {
-      squares: Array(9).fill(""),
-      xIsNext: true
-    };
-  }
-
-  handleClick(i: number) {
-    // 引数なしのslice()で別のオブジェクトを作り、immutableにする
-    const squares: Array<string> = this.state.squares.slice();
-    squares[i] = this.state.xIsNext ? "X" : "O";
-    this.setState({
-      squares: squares,
-      xIsNext: !this.state.xIsNext
-    });
-  }
+class Board extends React.Component<BoardProps> {
+  // constructor()は、DOM挿入前の初期化時に呼ばれるメソッド
+  // stateを使わずpropsだけのコンポーネントの場合など内容がsuper(props, context)だけの場合にはconstructorに記述自体を丸々省略できる。
 
   renderSquare(i: number) {
     return (
       // コンポーネントタグのonClickはReactにおける予約語ではない
       // イベントを表すpropsにはon[Event]、イベントを処理するメソッドにはhandle[Event]が名付けられる慣習
       <Square
-        value={this.state.squares[i]}
-        onClick={() => this.handleClick(i)}
+        value={this.props.squares[i]}
+        onClick={() => this.props.onClick(i)}
       />
     );
   }
 
   render() {
-    const winner = calculateWinner(this.state.squares);
-    let status;
-    if (winner === "O" || winner === "X") {
-      status = `Winner: ${winner}`;
-    } else {
-      status = `Next player: ${this.state.xIsNext ? "X" : "O"}`;
-    }
-
     return (
       <div>
-        <div className="status">{status}</div>
         <div className="board-row">
           {this.renderSquare(0)}
           {this.renderSquare(1)}
@@ -91,16 +66,98 @@ class Board extends React.Component<BoardPropsInterface, BoardStateInterface> {
   }
 }
 
-class Game extends React.Component {
+/* ============================================== Game ======================================== */
+
+interface GameProps {}
+
+// interface Squares {
+//   squares: string[];
+// }
+
+interface GameState {
+  //history: Squares[];
+
+  // interfaceをネストで表現する
+  history: Array<{
+    squares: string[];
+  }>;
+  stepNumber: number;
+  xIsNext: boolean;
+}
+
+class Game extends React.Component<GameProps, GameState> {
+  /* JavaScript のクラスでは、サブクラスのコンストラクタを定義する際は常に super を呼ぶ必要があります。
+  constructor を持つ React のクラスコンポーネントでは、すべてコンストラクタを super(props) の呼び出しから始めるべきです。 */
+  constructor(props: GameProps) {
+    super(props);
+    this.state = {
+      history: [
+        {
+          squares: Array(9).fill("")
+        }
+      ],
+      stepNumber: 0,
+      xIsNext: true
+    };
+  }
+
+  handleClick(i: number) {
+    const history = this.state.history.slice(0, this.state.stepNumber + 1);
+    const current = history[history.length - 1];
+    // スプレッド演算子でクローンを作る。
+    const squaresCopy = [...current.squares];
+    // ゲームの決着が既についている場合やクリックされたマス目が既に埋まっている場合に早期に return する。
+    if (calculateWinner(squaresCopy) || squaresCopy[i]) return;
+
+    squaresCopy[i] = this.state.xIsNext ? "X" : "O";
+    this.setState({
+      history: history.concat([
+        {
+          squares: squaresCopy
+        }
+      ]),
+      stepNumber: history.length,
+      xIsNext: !this.state.xIsNext
+    });
+  }
+
+  jumpTo(step: number) {
+    this.setState({
+      stepNumber: step,
+      xIsNext: step % 2 === 0
+    });
+  }
+
   render() {
+    const history = this.state.history;
+    const current = history[this.state.stepNumber];
+    const winner = calculateWinner(current.squares);
+
+    const moves = history.map((step, move) => {
+      const desc = move ? "Go to move #" + move : "Go to game start";
+      return (
+        <li key={move}>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+        </li>
+      );
+    });
+
+    let status;
+
+    if (winner === "O" || winner === "X") {
+      status = `Winner: ${winner}`;
+    } else {
+      status = `Next player: ${this.state.xIsNext ? "X" : "O"}`;
+    }
+
     return (
       <div className="game">
         <div className="game-board">
-          <Board />
+          <Board squares={current.squares} onClick={i => this.handleClick(i)} />
         </div>
         <div className="game-info">
-          <div>{/* status */}</div>
-          <ol>{/* TODO */}</ol>
+          <div>{status}</div>
+          <ol>{moves}</ol>
         </div>
       </div>
     );
