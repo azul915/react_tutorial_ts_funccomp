@@ -1,5 +1,4 @@
-/* 参考先　https://note.com/tkugimot/n/nf7fe751298b1 */
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import "./styles.css";
 
@@ -53,27 +52,19 @@ const Board = (props: Readonly<BoardProps>) => {
 
 interface GameProps {}
 
-interface GameState {
-  history: Array<{
-    squares: string[];
-  }>;
-  stepNumber: number;
-  xIsNext: boolean;
-}
-
 interface History {
   squares: string[];
 }
 
 const Game = (props: GameProps) => {
-  const [history, setHistory] = React.useState<History[]>([
+  const [history, setHistory] = useState<History[]>([
     {
       squares: Array(9).fill("")
     }
   ]);
 
-  const [stepNumber, setStepNumber] = React.useState<number>(0);
-  const [xIsNext, setXIsNext] = React.useState<boolean>(true);
+  const [stepNumber, setStepNumber] = useState<number>(0);
+  const [xIsNext, setXIsNext] = useState<boolean>(true);
 
   const handleClick = (i: Readonly<number>) => {
     const thatTimeHistory = history.slice(0, stepNumber + 1);
@@ -94,7 +85,7 @@ const Game = (props: GameProps) => {
         ])
       );
 
-      setStepNumber(history.length);
+      setStepNumber(stepNumber + 1);
 
       setXIsNext(!xIsNext);
     }
@@ -105,8 +96,8 @@ const Game = (props: GameProps) => {
     setXIsNext(step % 2 === 0);
   };
 
-  const current: History = history[stepNumber];
-  const winner: string = calculateWinner(current.squares);
+  const currentSquares: History = history[stepNumber];
+  const winner: string = calculateWinner(currentSquares.squares);
 
   const moves = history.map((step, move) => {
     const desc = move ? `Go to move #${move}` : "Go to game start";
@@ -130,7 +121,7 @@ const Game = (props: GameProps) => {
     <div className="game">
       <div className="game-board">
         <Board
-          squares={current.squares}
+          squares={currentSquares.squares}
           onClick={(i: number) => handleClick(i)}
         />
       </div>
