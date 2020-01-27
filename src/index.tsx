@@ -11,7 +11,8 @@ interface SquareProps {
 }
 
 // 関数コンポーネントは、render メソッドだけを有して自分の state を持たないコンポーネントを、よりシンプルに書くための方法
-const Square = (props: SquareProps) => {
+// 読込専用propsとして受け取る
+const Square = (props: Readonly<SquareProps>) => {
   return (
     // 関数コンポーネントは引数からpropsを受け取るのでthisが要らない
     // onClick={props.onClick}でもよい
@@ -88,7 +89,7 @@ interface GameState {
 class Game extends React.Component<GameProps, GameState> {
   /* JavaScript のクラスでは、サブクラスのコンストラクタを定義する際は常に super を呼ぶ必要があります。
   constructor を持つ React のクラスコンポーネントでは、すべてコンストラクタを super(props) の呼び出しから始めるべきです。 */
-  constructor(props: GameProps) {
+  constructor(props: Readonly<GameProps>) {
     super(props);
     this.state = {
       history: [
